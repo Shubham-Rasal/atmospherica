@@ -1,31 +1,169 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Track } from "@/types/supabase";
 
-function TrackCard({ track, index }: { track: Track; index: number }) {
-  const [playing, setPlaying] = useState(false);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+// Curated atmospheric color palette
+const PALETTE = [
+  "#C084FC", "#818CF8", "#60A5FA", "#34D399",
+  "#FBBF24", "#F87171", "#FB923C", "#A78BFA",
+  "#38BDF8", "#4ADE80", "#F472B6", "#E879F9",
+  "#FCD34D", "#6EE7B7", "#93C5FD", "#FCA5A5",
+  "#86EFAC", "#BAE6FD", "#DDD6FE", "#FDE68A",
+];
 
-  function togglePlay(e: React.MouseEvent) {
-    e.preventDefault();
-    if (!audio) {
-      const a = new Audio(track.music_url);
-      a.onended = () => setPlaying(false);
-      a.play();
-      setAudio(a);
-      setPlaying(true);
-    } else if (playing) {
-      audio.pause();
-      setPlaying(false);
-    } else {
-      audio.play();
-      setPlaying(true);
+function colorFromId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) & 0xffffffff;
+  }
+  return PALETTE[Math.abs(hash) % PALETTE.length];
+}
+
+// Darken a hex color for text contrast
+function darken(hex: string, amount = 0.45): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.floor(((n >> 16) & 0xff) * (1 - amount));
+  const g = Math.floor(((n >> 8) & 0xff) * (1 - amount));
+  const b = Math.floor((n & 0xff) * (1 - amount));
+  return `rgb(${r},${g},${b})`;
+}
+
+const WAVEFORM = [35, 58, 44, 84, 30, 74, 54, 90, 40, 70, 48, 80, 64, 36, 76];
+
+function FeelTile({
+  track,
+  index,
+  isActive,
+  isPlaying,
+  onClick,
+}: {
+  track: Track;
+  index: number;
+  isActive: boolean;
+  isPlaying: boolean;
+  onClick: () => void;
+}) {
+  const color = colorFromId(track.id);
+  const textColor = darken(color);
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative group focus:outline-none"
+      style={{
+        aspectRatio: "1",
+        background: color,
+        borderRadius: isActive ? "16px" : "8px",
+        transform: isActive ? "scale(1.06)" : "scale(1)",
+        zIndex: isActive ? 10 : 1,
+        transition: "border-radius 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease",
+        boxShadow: isActive
+          ? `0 8px 32px ${color}88, 0 2px 8px rgba(0,0,0,0.12)`
+          : "none",
+        animationDelay: `${index * 30}ms`,
+      }}
+      aria-label={`Track ${index + 1}`}
+    >
+      {/* Idle hover shimmer */}
+      {!isActive && (
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          style={{
+            borderRadius: "inherit",
+            background: "rgba(255,255,255,0.25)",
+          }}
+        />
+      )}
+
+      {/* Playing waveform */}
+      {isActive && (
+        <div className="absolute inset-0 flex items-end justify-center gap-[2px] p-2" style={{ borderRadius: "inherit" }}>
+          {WAVEFORM.map((h, i) => (
+            <div
+              key={i}
+              className={isPlaying ? "waveform-bar" : ""}
+              style={{
+                flex: 1,
+                height: `${h}%`,
+                background: textColor,
+                opacity: 0.6,
+                borderRadius: "2px",
+                transformOrigin: "bottom",
+                animationDelay: `${i * 0.08}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Guess count badge */}
+      {track.guess_count > 0 && !isActive && (
+        <div
+          className="absolute top-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: "rgba(0,0,0,0.2)", color: "white" }}
+        >
+          {track.guess_count}
+        </div>
+      )}
+    </button>
+  );
+}
+
+export default function HomePage() {
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    fetch("/api/tracks?limit=200")
+      .then((r) => r.json())
+      .then((d) => setTracks(d.tracks ?? []))
+      .finally(() => setLoading(false));
+  }, []);
+
+  function handleTileClick(track: Track) {
+    if (activeId === track.id) {
+      // Toggle play/pause on same tile
+      if (playing) {
+        audioRef.current?.pause();
+        setPlaying(false);
+      } else {
+        audioRef.current?.play();
+        setPlaying(true);
+      }
+      return;
     }
+
+    // Switch to new tile
+    audioRef.current?.pause();
+    setActiveId(track.id);
+    setPlaying(false);
+
+    const a = new Audio(track.music_url);
+    a.onended = () => setPlaying(false);
+    a.oncanplaythrough = () => {
+      a.play().then(() => setPlaying(true)).catch(() => {});
+    };
+    a.load();
+    audioRef.current = a;
   }
 
-  useEffect(() => { return () => { audio?.pause(); }; }, [audio]);
+  function handleClose() {
+    audioRef.current?.pause();
+    setActiveId(null);
+    setPlaying(false);
+  }
+
+  useEffect(() => {
+    return () => { audioRef.current?.pause(); };
+  }, []);
+
+  const activeTrack = tracks.find((t) => t.id === activeId) ?? null;
+  const activeColor = activeTrack ? colorFromId(activeTrack.id) : "#7C5BF5";
 
   const timeAgo = (date: string) => {
     const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -35,220 +173,168 @@ function TrackCard({ track, index }: { track: Track; index: number }) {
     return `${Math.floor(s / 86400)}d ago`;
   };
 
-  const bars = [42, 68, 52, 88, 36, 74, 58, 44, 72, 50, 84, 40, 64, 92, 32, 76, 56, 82, 46, 62];
-
-  // Warm emoji set per card index
-  const emojis = ["🌊", "🌙", "☁️", "🍂", "🌿", "✨", "🌅", "🫧", "🌸", "🎭"];
-  const emoji = emojis[index % emojis.length];
-
   return (
-    <div
-      className="card card-hover fade-up flex flex-col overflow-hidden"
-      style={{ animationDelay: `${index * 60}ms` }}
-    >
-      {/* Top — waveform section */}
-      <div
-        className="px-5 pt-5 pb-4 transition-colors duration-500"
-        style={{ background: playing ? "#F0ECFF" : "#FAFAF8" }}
-      >
-        {/* Emoji + playing badge */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-2xl">{emoji}</span>
-          {playing && (
-            <span
-              className="text-xs font-semibold px-2.5 py-1 rounded-full"
-              style={{ background: "var(--accent)", color: "white" }}
-            >
-              Playing
-            </span>
-          )}
-        </div>
-
-        {/* Waveform */}
-        <div className="flex items-end gap-[3px] h-10 mb-3">
-          {bars.map((h, i) => (
-            <div
-              key={i}
-              className={`rounded-full flex-1 ${playing ? "waveform-bar" : ""}`}
-              style={{
-                background: playing ? "var(--accent)" : "#DEDAD2",
-                height: `${h}%`,
-                animationDelay: `${i * 0.06}s`,
-                transition: "background 0.4s",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Play button */}
-        <button
-          onClick={togglePlay}
-          className="w-full py-2 rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2"
-          style={{
-            background: playing ? "var(--accent)" : "var(--pill-dark)",
-            color: "white",
-          }}
-        >
-          <span style={{ fontSize: "11px" }}>{playing ? "⏸" : "▶"}</span>
-          {playing ? "Pause" : "Play track"}
-        </button>
-      </div>
-
-      {/* Bottom */}
-      <div className="px-5 py-4 flex flex-col gap-3" style={{ background: "var(--surface)" }}>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span
-            className="text-xs font-medium px-2.5 py-1 rounded-full"
-            style={{ background: "var(--tag-green-bg)", color: "var(--tag-green-text)" }}
-          >
-            {track.guess_count} {track.guess_count === 1 ? "guess" : "guesses"}
-          </span>
-          <span
-            className="text-xs font-medium px-2.5 py-1 rounded-full"
-            style={{ background: "var(--tag-yellow-bg)", color: "var(--tag-yellow-text)" }}
-          >
-            {timeAgo(track.created_at)}
-          </span>
-        </div>
-
-        <Link
-          href={`/guess/${track.id}`}
-          className="btn-dark text-center py-2.5 text-sm block"
-        >
-          Guess the feeling →
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-export default function HomePage() {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/tracks")
-      .then((r) => r.json())
-      .then((d) => setTracks(d.tracks ?? []))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <main className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <main className="min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
       {/* Header */}
-      <header className="px-6 pt-5 pb-4 flex items-center justify-between">
+      <header className="px-5 pt-5 pb-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-base font-bold"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold"
             style={{ background: "var(--pill-dark)", color: "white" }}
           >
             ♪
           </div>
-          <div>
-            <p className="text-[13px] font-bold leading-tight" style={{ color: "var(--text)" }}>
-              Atmospherica
-            </p>
-            <p className="text-[11px] leading-tight" style={{ color: "var(--text-2)" }}>
-              Feel the music
-            </p>
-          </div>
+          <span className="text-sm font-bold" style={{ color: "var(--text)" }}>
+            Atmospherica
+          </span>
         </div>
-        <Link
-          href="/submit"
-          className="btn-dark px-4 py-2 text-sm"
-        >
+        <Link href="/submit" className="btn-dark px-4 py-2 text-sm">
           + Share feeling
         </Link>
       </header>
 
-      {/* Hero card */}
-      <section className="px-6 pb-6 fade-up">
-        <div
-          className="rounded-3xl px-6 pt-8 pb-6 relative overflow-hidden"
-          style={{ background: "var(--pill-dark)", minHeight: "220px" }}
-        >
-          {/* Decorative circles */}
-          <div
-            className="absolute -top-8 -right-8 w-36 h-36 rounded-full opacity-10"
-            style={{ background: "white" }}
-          />
-          <div
-            className="absolute -bottom-6 -right-2 w-24 h-24 rounded-full opacity-10"
-            style={{ background: "var(--bg)" }}
-          />
-
-          <div className="relative">
-            <div className="text-4xl mb-4 float select-none">🎵</div>
-            <h1
-              className="text-3xl font-black leading-[1.1] mb-3"
-              style={{ color: "white", letterSpacing: "-0.025em" }}
-            >
-              Someone felt something.{" "}
-              <span style={{ color: "var(--bg)" }}>Can you hear it?</span>
-            </h1>
-            <p className="text-sm mb-5 leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-              They described a moment. AI turned it into music. Listen and guess the emotion.
-            </p>
-            <Link
-              href="/submit"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-150"
-              style={{ background: "var(--bg)", color: "var(--pill-dark)" }}
-            >
-              Share a feeling →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Section label */}
-      <div className="px-6 mb-4 flex items-center justify-between">
-        <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
-          Latest Feelings
-        </h2>
-        <span className="text-xs font-medium" style={{ color: "var(--text-2)" }}>
-          {tracks.length} tracks
-        </span>
+      {/* Intro line */}
+      <div className="px-5 pb-3 flex items-center justify-between">
+        <p className="text-xs" style={{ color: "var(--text-2)" }}>
+          {loading ? "Loading feelings…" : `${tracks.length} feelings, each turned into music`}
+        </p>
+        {!loading && tracks.length > 0 && (
+          <p className="text-xs" style={{ color: "var(--muted)" }}>tap a square to listen</p>
+        )}
       </div>
 
-      {/* Feed */}
-      <section className="px-6 pb-16 stagger">
+      {/* Canvas grid */}
+      <div className="flex-1 px-3 pb-4">
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            className="grid gap-1.5"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(64px, 1fr))" }}
+          >
+            {Array.from({ length: 48 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-3xl h-56 animate-pulse"
-                style={{ background: "rgba(255,255,255,0.5)" }}
+                className="animate-pulse rounded-lg"
+                style={{ aspectRatio: "1", background: "rgba(28,27,24,0.08)", animationDelay: `${i * 20}ms` }}
               />
             ))}
           </div>
         ) : tracks.length === 0 ? (
-          <div
-            className="card text-center py-16 px-8"
-          >
+          <div className="card text-center py-16 px-8 mx-auto max-w-sm mt-8">
             <div className="text-5xl mb-4">🌫️</div>
             <p className="text-base font-semibold mb-1" style={{ color: "var(--text)" }}>
               No feelings yet
             </p>
-            <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-              Be the first to share one
-            </p>
+            <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>Be the first to share one</p>
             <Link href="/submit" className="btn-dark px-6 py-2.5 text-sm inline-block">
               Share a feeling →
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            className="grid gap-1.5"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(64px, 1fr))" }}
+          >
             {tracks.map((track, i) => (
-              <TrackCard key={track.id} track={track} index={i} />
+              <FeelTile
+                key={track.id}
+                track={track}
+                index={i}
+                isActive={activeId === track.id}
+                isPlaying={activeId === track.id && playing}
+                onClick={() => handleTileClick(track)}
+              />
+            ))}
+            {/* Phantom tiles to fill the row */}
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={`ph-${i}`} style={{ aspectRatio: "1" }} />
             ))}
           </div>
         )}
-      </section>
+      </div>
 
-      {/* Footer */}
-      <footer className="px-6 pb-8 text-center">
-      </footer>
+      {/* Active track panel — slides up from bottom */}
+      <div
+        className="fixed left-0 right-0 bottom-0 z-50 transition-all duration-300 ease-out px-4 pb-5"
+        style={{
+          transform: activeTrack ? "translateY(0)" : "translateY(110%)",
+          pointerEvents: activeTrack ? "auto" : "none",
+        }}
+      >
+        <div
+          className="card p-4 flex flex-col gap-3 max-w-md mx-auto"
+          style={{
+            borderTop: `3px solid ${activeColor}`,
+            boxShadow: `0 -4px 40px ${activeColor}40, 0 4px 24px rgba(0,0,0,0.1)`,
+          }}
+        >
+          {/* Top row */}
+          <div className="flex items-center gap-3">
+            {/* Color swatch */}
+            <div
+              className="w-10 h-10 rounded-xl flex-shrink-0"
+              style={{ background: activeColor }}
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>
+                {playing ? "Now playing" : "Paused"}
+              </p>
+              {activeTrack && (
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  {activeTrack.guess_count} {activeTrack.guess_count === 1 ? "guess" : "guesses"} · {timeAgo(activeTrack.created_at)}
+                </p>
+              )}
+            </div>
+
+            {/* Play/pause */}
+            <button
+              onClick={() => activeTrack && handleTileClick(activeTrack)}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-transform active:scale-95"
+              style={{ background: activeColor, color: darken(activeColor) }}
+            >
+              {playing ? "⏸" : "▶"}
+            </button>
+
+            {/* Close */}
+            <button
+              onClick={handleClose}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0 transition-opacity hover:opacity-60"
+              style={{ background: "var(--border)", color: "var(--text-2)" }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Waveform strip */}
+          <div className="flex items-end gap-[2px] h-8 px-1">
+            {WAVEFORM.map((h, i) => (
+              <div
+                key={i}
+                className={playing ? "waveform-bar" : ""}
+                style={{
+                  flex: 1,
+                  height: `${h}%`,
+                  background: activeColor,
+                  opacity: 0.5,
+                  borderRadius: "2px",
+                  transformOrigin: "bottom",
+                  animationDelay: `${i * 0.08}s`,
+                  transition: "opacity 0.3s",
+                }}
+              />
+            ))}
+          </div>
+
+          {/* CTA */}
+          {activeTrack && (
+            <Link
+              href={`/guess/${activeTrack.id}`}
+              className="btn-dark py-3 text-sm text-center block"
+            >
+              Guess the feeling →
+            </Link>
+          )}
+        </div>
+      </div>
     </main>
   );
 }
