@@ -10,7 +10,3 @@ function getClient() {
 export function getArchetypesNs() {
   return getClient().namespace("atmospherica-archetypes");
 }
-
-export function getFeelingsNs() {
-  return getClient().namespace("atmospherica-feelings");
-}

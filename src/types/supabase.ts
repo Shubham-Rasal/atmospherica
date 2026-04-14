@@ -14,6 +14,7 @@ export interface Database {
           revealed: boolean;
           tpuf_vector_id: string | null;
           feeling_text: string | null;
+          grid_position: number | null;
         };
         Insert: {
           id: string;
@@ -24,6 +25,7 @@ export interface Database {
           play_count?: number;
           guess_count?: number;
           feeling_text?: string | null;
+          grid_position?: number | null;
         };
         Update: {
           id?: string;
@@ -33,6 +35,8 @@ export interface Database {
           tpuf_vector_id?: string | null;
           play_count?: number;
           guess_count?: number;
+          feeling_text?: string | null;
+          grid_position?: number | null;
         };
       };
       guesses: {
@@ -71,6 +75,30 @@ export interface Database {
           overall_score?: number;
         };
       };
+      master_tracks: {
+        Row: {
+          id: string;
+          created_at: string;
+          music_url: string;
+          prompt: string | null;
+          tile_count: number | null;
+          version: number | null;
+        };
+        Insert: {
+          id?: string;
+          music_url: string;
+          prompt?: string | null;
+          tile_count?: number | null;
+          version?: number | null;
+        };
+        Update: {
+          id?: string;
+          music_url?: string;
+          prompt?: string | null;
+          tile_count?: number | null;
+          version?: number | null;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -78,16 +106,5 @@ export interface Database {
   };
 }
 
-export type Track = Database["public"]["Tables"]["tracks"]["Row"];
-export type Guess = Database["public"]["Tables"]["guesses"]["Row"];
-
-export type Scorecard = {
-  emotionalAccuracy: number;
-  specificity: number;
-  consensus: number;
-  discoveryRank: number;
-  totalGuesses: number;
-  overallScore: number;
-  guessText: string;
-  feelingText: string | null;
-};
+export type Track = Database["public"]["Tables"]["tracks"]["Row"] & { grid_position: number | null };
+export type MasterTrack = Database["public"]["Tables"]["master_tracks"]["Row"];

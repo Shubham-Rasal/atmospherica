@@ -18,12 +18,13 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "anymusic — Can you feel what they felt?",
+  title: "anymusic — Collective Jigsaw Audio Canvas",
   description:
-    "Someone described a feeling. AI turned it into music. Can you guess what they were feeling?",
+    "Add a feeling to the puzzle. Every five pieces, the group’s emotions merge into one evolving master track.",
   openGraph: {
     title: "anymusic",
-    description: "Someone described a moment. AI turned it into music. Can you guess what they felt?",
+    description:
+      "A shared puzzle of feelings and sound. Each tile is a clip; the collective track grows as more join in.",
     type: "website",
   },
 };

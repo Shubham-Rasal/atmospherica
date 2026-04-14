@@ -71,8 +71,80 @@ body {
   50% { transform: scaleY(1); }
 }
 
+/* Collective master track button — subtle attention pulse when a new version exists */
+@keyframes master-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.12); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.06); }
+}
+.master-track-pulse {
+  animation: master-pulse 2.4s ease-in-out infinite;
+}
+
+/* Submit flow — progress shimmer */
+@keyframes reveal-progress-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+.reveal-progress-track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(28, 27, 24, 0.08);
+}
+.reveal-progress-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pill-dark) 0%, var(--accent) 50%, var(--pill-dark) 100%);
+  background-size: 200% 100%;
+  animation: reveal-progress-shimmer 1.8s ease-in-out infinite;
+}
+
+/* Success check pop */
+@keyframes reveal-check-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  55% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.reveal-success-icon {
+  animation: reveal-check-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* New tile — ring pulse (does not fight inline transform) */
+@keyframes tile-ring-out {
+  0% {
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75), 0 0 24px rgba(255, 255, 255, 0.25);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0), 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+.tile-just-landed::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 10px;
+  pointer-events: none;
+  animation: tile-ring-out 1s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-progress-bar { animation: none; opacity: 0.85; }
+  .reveal-success-icon { animation: none; opacity: 1; transform: scale(1); }
+  .tile-just-landed::after { animation: none; opacity: 0; }
+}
+
 /* Score bar */
 .score-bar { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
 
 /* Float */
 @keyframes float {

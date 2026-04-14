@@ -31,6 +31,16 @@ create index if not exists guesses_track_id_idx on guesses(track_id);
 create index if not exists guesses_similarity_idx on guesses(track_id, similarity_score desc);
 create index if not exists tracks_created_at_idx on tracks(created_at desc);
 
+-- Collective master track (regenerated every 5 new feelings)
+create table if not exists master_tracks (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  music_url text not null,
+  prompt text,
+  tile_count int,
+  version int default 1
+);
+
 -- Storage bucket for audio
 insert into storage.buckets (id, name, public)
 values ('audio', 'audio', true)

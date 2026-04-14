@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { embed } from "@/lib/embeddings";
-import { getArchetypesNs, getFeelingsNs } from "@/lib/turbopuffer";
+import { getArchetypesNs } from "@/lib/turbopuffer";
 import { supabaseAdmin } from "@/lib/supabase";
 import { ElevenLabsClient } from "elevenlabs";
+import { generateMasterTrack } from "@/lib/master";
+import { serializeError } from "@/lib/errors";
+import type { Database } from "@/types/supabase";
+
+type TracksInsert = Database["public"]["Tables"]["tracks"]["Insert"];
 
 const elevenlabs = new ElevenLabsClient({
   apiKey: process.env.ELEVENLABS_API_KEY!,
@@ -10,7 +15,7 @@ const elevenlabs = new ElevenLabsClient({
 
 export async function POST(req: NextRequest) {
   try {
-    const { feeling, userId } = await req.json();
+    const { feeling, userId, gridPosition } = await req.json();
 
     if (!feeling || typeof feeling !== "string" || feeling.trim().length < 5) {
       return NextResponse.json({ error: "Feeling too short" }, { status: 400 });
@@ -70,14 +75,16 @@ export async function POST(req: NextRequest) {
     const trackId = crypto.randomUUID();
     // Try inserting with feeling_text; fall back without it if column not yet migrated
     let dbError;
-    ({ error: dbError } = await supabaseAdmin.from("tracks").insert({
+    const withFeeling: TracksInsert = {
       id: trackId,
       music_url: musicUrl,
       anon_user_id: userId,
       feeling_text: trimmed,
       revealed: false,
       tpuf_vector_id: trackId,
-    } as any));
+      grid_position: typeof gridPosition === "number" ? gridPosition : null,
+    };
+    ({ error: dbError } = await supabaseAdmin.from("tracks").insert(withFeeling));
 
     if (dbError) {
       // Retry without feeling_text in case column doesn't exist yet
@@ -87,27 +94,26 @@ export async function POST(req: NextRequest) {
         anon_user_id: userId,
         revealed: false,
         tpuf_vector_id: trackId,
+        grid_position: typeof gridPosition === "number" ? gridPosition : null,
       }));
     }
 
     if (dbError) throw dbError;
 
-    // 7. Index feeling in turbopuffer feelings namespace
-    // The feeling text is NOT stored in attributes — only track_id for filter-based lookup
-    await getFeelingsNs().write({
-      upsert_rows: [
-        {
-          id: trackId,
-          vector: feelingVector,
-          track_id: trackId,
-        },
-      ],
-      distance_metric: "cosine_distance",
-    });
+    const { count: feelingCount, error: countError } = await supabaseAdmin
+      .from("tracks")
+      .select("*", { count: "exact", head: true })
+      .not("feeling_text", "is", null);
+
+    if (countError) throw countError;
+
+    if (typeof feelingCount === "number" && feelingCount > 0 && feelingCount % 5 === 0) {
+      void generateMasterTrack().catch((e) => console.error("Master track regeneration:", e));
+    }
 
     return NextResponse.json({ trackId, musicUrl });
   } catch (err) {
     console.error("Submit error:", err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: serializeError(err) }, { status: 500 });
   }
 }
