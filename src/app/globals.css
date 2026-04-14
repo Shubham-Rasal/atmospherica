@@ -71,15 +71,6 @@ body {
   50% { transform: scaleY(1); }
 }
 
-/* Collective master track button — subtle attention pulse when a new version exists */
-@keyframes master-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.12); }
-  50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.06); }
-}
-.master-track-pulse {
-  animation: master-pulse 2.4s ease-in-out infinite;
-}
-
 /* Submit flow — progress shimmer */
 @keyframes reveal-progress-shimmer {
   0% { transform: translateX(-100%); }
@@ -595,4 +586,952 @@ body {
   .submit-content { padding: 16px 18px 48px; }
   .submit-form-area { max-width: 100%; }
   .examples-section { max-width: 100%; }
+}
+
+/* ── Mood Radio — warm broadcast / editorial dark ───────────── */
+.mood-radio {
+  --mood-bg-deep: oklch(0.09 0.018 45);
+  --mood-bg-mid: oklch(0.13 0.028 42);
+  --mood-glow-a: oklch(0.32 0.09 48);
+  --mood-glow-b: oklch(0.22 0.06 25);
+  --mood-ink: oklch(0.96 0.012 85);
+  --mood-ink-soft: oklch(0.74 0.03 78);
+  --mood-ink-mute: oklch(0.5 0.035 72);
+  --mood-accent: oklch(0.78 0.11 72);
+  --mood-accent-dim: oklch(0.55 0.12 48);
+  --mood-live: oklch(0.62 0.2 28);
+  --mood-card: color-mix(in oklch, oklch(0.22 0.03 50) 75%, transparent);
+  --mood-card-edge: color-mix(in oklch, oklch(0.96 0.02 85) 12%, transparent);
+  --mood-glass: color-mix(in oklch, oklch(0.18 0.02 40) 88%, transparent);
+  position: relative;
+  isolation: isolate;
+  color: var(--mood-ink);
+  background:
+    radial-gradient(ellipse 120% 70% at 50% -15%, var(--mood-glow-b), transparent 52%),
+    radial-gradient(ellipse 90% 55% at 100% 20%, color-mix(in oklch, var(--mood-glow-a) 45%, transparent), transparent 48%),
+    radial-gradient(ellipse 70% 45% at 0% 60%, color-mix(in oklch, var(--mood-glow-a) 25%, transparent), transparent 50%),
+    linear-gradient(175deg, var(--mood-bg-mid) 0%, var(--mood-bg-deep) 55%, oklch(0.07 0.012 40) 100%);
+  font-family: var(--font-body, system-ui, sans-serif);
+}
+
+.mood-radio::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mood-live-dot,
+  .mood-player-glow,
+  .mood-hero-line {
+    animation: none !important;
+  }
+}
+
+.mood-radio-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.mood-hero-line {
+  width: 48px;
+  height: 1px;
+  margin: 0 auto 1.25rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--mood-accent) 55%, transparent),
+    transparent
+  );
+  animation: mood-line-glow 5s ease-in-out infinite;
+}
+
+@keyframes mood-line-glow {
+  0%, 100% { opacity: 0.45; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.15); }
+}
+
+.mood-kicker {
+  font-size: clamp(0.65rem, 1.5vw, 0.7rem);
+  font-weight: 600;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--mood-ink-mute);
+}
+
+.mood-title {
+  font-family: var(--font-display, serif);
+  font-size: clamp(1.65rem, 5vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  max-width: 22ch;
+  margin-inline: auto;
+}
+
+.mood-title em {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--mood-ink-soft);
+}
+
+.mood-sub {
+  font-size: clamp(0.875rem, 2.2vw, 0.95rem);
+  line-height: 1.65;
+  color: var(--mood-ink-mute);
+  max-width: 36ch;
+  margin-inline: auto;
+}
+
+.mood-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.88rem 1.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: oklch(0.11 0.022 42);
+  border: 1px solid color-mix(in oklch, oklch(0.98 0.02 78) 55%, transparent);
+  background: linear-gradient(
+    168deg,
+    oklch(0.985 0.012 82) 0%,
+    oklch(0.91 0.035 72) 48%,
+    oklch(0.84 0.06 58) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 45%, transparent) inset,
+    0 -1px 0 color-mix(in oklch, oklch(0.35 0.04 45) 15%, transparent) inset,
+    0 14px 36px color-mix(in oklch, oklch(0.15 0.04 40) 45%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mood-cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklch, var(--mood-accent) 35%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 50%, transparent) inset,
+    0 18px 44px color-mix(in oklch, oklch(0.2 0.06 48) 50%, transparent);
+}
+
+.mood-cta:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mood-cta:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.mood-cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mood-player-shell {
+  position: relative;
+  border-radius: 1.75rem;
+  padding: 1.5rem 1.5rem 1.65rem;
+  background: linear-gradient(
+    155deg,
+    color-mix(in oklch, var(--mood-card) 100%, transparent),
+    color-mix(in oklch, var(--mood-glass) 100%, transparent)
+  );
+  border: 1px solid var(--mood-card-edge);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, oklch(0.5 0.02 80) 8%, transparent) inset,
+    0 28px 64px color-mix(in oklch, oklch(0 0 0) 45%, transparent);
+  overflow: hidden;
+}
+
+.mood-player-glow {
+  position: absolute;
+  width: 140%;
+  height: 80%;
+  top: -40%;
+  left: -20%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in oklch, var(--mood-accent) 18%, transparent),
+    transparent 65%
+  );
+  pointer-events: none;
+  animation: mood-player-breathe 8s ease-in-out infinite;
+}
+
+@keyframes mood-player-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.03); }
+}
+
+.mood-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--mood-live) 90%, oklch(0.95 0.02 85));
+  background: color-mix(in oklch, var(--mood-live) 22%, transparent);
+  border: 1px solid color-mix(in oklch, var(--mood-live) 35%, transparent);
+}
+
+.mood-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mood-live);
+  box-shadow: 0 0 10px color-mix(in oklch, var(--mood-live) 60%, transparent);
+  animation: mood-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mood-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(0.92); }
+}
+
+.mood-meta {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--mood-ink-mute);
+}
+
+.mood-now-text {
+  font-family: var(--font-display, serif);
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--mood-ink);
+}
+
+.mood-waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 3.25rem;
+  padding: 0 0.25rem;
+}
+
+.mood-waveform span {
+  flex: 1;
+  border-radius: 3px;
+  min-height: 4px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--mood-accent) 75%, transparent),
+    color-mix(in oklch, var(--mood-accent-dim) 70%, transparent)
+  );
+  opacity: 0.35;
+  transform-origin: bottom center;
+  transition: opacity 0.25s ease;
+}
+
+/* Live levels from Web Audio Analyser — height set inline; no keyframe loop */
+.mood-waveform--live span {
+  opacity: 1;
+  animation: none !important;
+  transition: height 45ms linear, opacity 0.2s ease;
+}
+
+/* Default: CSS loop while audio is playing (page uses .mood-waveform.is-playing) */
+.mood-waveform.is-playing span {
+  opacity: 1;
+  animation: mood-wave 1.15s ease-in-out infinite;
+}
+
+.mood-waveform.is-playing span:nth-child(odd) {
+  animation-duration: 0.95s;
+}
+.mood-waveform.is-playing span:nth-child(3n) {
+  animation-duration: 1.25s;
+}
+
+/* Alias if markup uses --fallback */
+.mood-waveform--fallback.is-playing span {
+  opacity: 1;
+  animation: mood-wave 1.15s ease-in-out infinite;
+}
+
+.mood-waveform--fallback.is-playing span:nth-child(odd) {
+  animation-duration: 0.95s;
+}
+.mood-waveform--fallback.is-playing span:nth-child(3n) {
+  animation-duration: 1.25s;
+}
+
+@keyframes mood-wave {
+  0%, 100% { transform: scaleY(0.28); }
+  50% { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mood-waveform.is-playing span,
+  .mood-waveform--fallback.is-playing span {
+    animation: none;
+    opacity: 0.85;
+  }
+  .mood-waveform--live span {
+    transition: height 80ms linear;
+  }
+}
+
+.mood-play-btn {
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: oklch(0.1 0.025 42);
+  border: 1px solid color-mix(in oklch, oklch(0.95 0.03 75) 40%, transparent);
+  background: radial-gradient(
+      120% 120% at 30% 25%,
+      oklch(0.99 0.01 85) 0%,
+      oklch(0.9 0.04 75) 45%,
+      oklch(0.82 0.08 62) 100%
+    );
+  box-shadow:
+    0 2px 0 color-mix(in oklch, oklch(1 0 0) 55%, transparent) inset,
+    0 -2px 8px color-mix(in oklch, oklch(0.25 0.06 40) 25%, transparent) inset,
+    0 10px 28px color-mix(in oklch, oklch(0 0 0) 38%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--mood-accent) 22%, transparent);
+  transition: transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.18s ease;
+}
+
+.mood-play-btn:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 2px 0 color-mix(in oklch, oklch(1 0 0) 60%, transparent) inset,
+    0 14px 36px color-mix(in oklch, oklch(0.12 0.04 45) 40%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--mood-accent) 42%, transparent);
+}
+
+.mood-play-btn:active {
+  transform: scale(0.96);
+}
+
+.mood-play-btn:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 60%, transparent);
+  outline-offset: 4px;
+}
+
+.mood-skip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.2rem;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--mood-ink-soft);
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 28%, transparent);
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklch, var(--mood-ink) 14%, transparent) 0%,
+    color-mix(in oklch, oklch(0.1 0.02 42) 88%, transparent) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 8%, transparent) inset,
+    0 6px 18px color-mix(in oklch, oklch(0 0 0) 28%, transparent);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.mood-skip:hover {
+  color: var(--mood-ink);
+  border-color: color-mix(in oklch, var(--mood-accent) 48%, transparent);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 12%, transparent) inset,
+    0 10px 24px color-mix(in oklch, oklch(0 0 0) 32%, transparent);
+}
+
+.mood-skip:active {
+  transform: translateY(0);
+}
+
+.mood-skip:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 50%, transparent);
+  outline-offset: 3px;
+}
+
+.mood-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mood-ink-mute);
+  margin-bottom: 0.85rem;
+}
+
+.mood-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: min(50vh, 26rem);
+  overflow-y: auto;
+  padding-right: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--mood-ink) 18%, transparent) transparent;
+}
+
+.mood-feed::-webkit-scrollbar {
+  width: 5px;
+}
+.mood-feed::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--mood-ink) 15%, transparent);
+  border-radius: 999px;
+}
+
+.mood-feed-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 1.1rem;
+  padding: 0.9rem 1rem 0.9rem 1.1rem;
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 14%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--mood-ink) 5%, transparent),
+    color-mix(in oklch, oklch(0.06 0.015 42) 75%, transparent)
+  );
+  cursor: pointer;
+  box-shadow: 0 4px 14px color-mix(in oklch, oklch(0 0 0) 18%, transparent);
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+}
+
+.mood-feed-item:hover {
+  border-color: color-mix(in oklch, var(--mood-accent) 28%, transparent);
+  background: color-mix(in oklch, var(--mood-ink) 10%, transparent);
+  box-shadow: 0 6px 18px color-mix(in oklch, oklch(0 0 0) 24%, transparent);
+}
+
+.mood-feed-item:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.mood-feed-item.is-active {
+  background: color-mix(in oklch, var(--mood-accent) 12%, transparent);
+  border-color: color-mix(in oklch, var(--mood-accent) 28%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--mood-accent) 15%, transparent) inset;
+  border-left: 3px solid var(--mood-accent);
+  padding-left: calc(1.1rem - 2px);
+}
+
+.mood-feed-text {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--mood-ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mood-feed-item.is-active .mood-feed-text {
+  color: var(--mood-ink);
+}
+
+.mood-feed-meta {
+  font-size: 0.65rem;
+  margin-top: 0.35rem;
+  letter-spacing: 0.04em;
+  color: var(--mood-ink-mute);
+}
+
+.mood-toast {
+  position: fixed;
+  left: 50%;
+  z-index: 60;
+  max-width: min(92vw, 22rem);
+  transform: translateX(-50%);
+  top: max(12px, env(safe-area-inset-top));
+  padding: 0.65rem 1.15rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--mood-ink-soft);
+  background: color-mix(in oklch, var(--mood-bg-mid) 92%, transparent);
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 22%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 16px 48px color-mix(in oklch, oklch(0 0 0) 40%, transparent);
+}
+
+.mood-skeleton {
+  height: 8rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(
+    110deg,
+    color-mix(in oklch, var(--mood-ink) 6%, transparent) 0%,
+    color-mix(in oklch, var(--mood-ink) 12%, transparent) 45%,
+    color-mix(in oklch, var(--mood-ink) 6%, transparent) 90%
+  );
+  background-size: 200% 100%;
+  animation: mood-shimmer 1.4s ease infinite;
+}
+
+@keyframes mood-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mood-skeleton { animation: none; opacity: 0.7; }
+}
+
+/* Tinker / share panel */
+.mood-hack {
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 16%, transparent);
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklch, var(--mood-ink) 6%, transparent),
+    color-mix(in oklch, oklch(0.08 0.02 42) 70%, transparent)
+  );
+  box-shadow: 0 8px 28px color-mix(in oklch, oklch(0 0 0) 22%, transparent);
+  overflow: hidden;
+}
+
+.mood-hack summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mood-ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.mood-hack summary:hover {
+  background: color-mix(in oklch, var(--mood-accent) 8%, transparent);
+  color: var(--mood-ink);
+}
+
+.mood-hack summary:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 45%, transparent);
+  outline-offset: -2px;
+  border-radius: 0.5rem;
+}
+
+.mood-hack summary::-webkit-details-marker {
+  display: none;
+}
+
+.mood-hack summary::after {
+  content: "▸";
+  font-size: 0.65rem;
+  opacity: 0.5;
+  transition: transform 0.2s ease;
+}
+
+.mood-hack[open] summary::after {
+  transform: rotate(90deg);
+}
+
+.mood-hack-body {
+  padding: 0 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  border-top: 1px solid color-mix(in oklch, var(--mood-ink) 8%, transparent);
+  padding-top: 0.85rem;
+}
+
+.mood-hack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mood-hack-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mood-ink-mute);
+  width: 100%;
+}
+
+.mood-hack-btn {
+  flex: 1;
+  min-width: 7rem;
+  padding: 0.62rem 0.85rem;
+  border-radius: 0.85rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  color: var(--mood-ink-soft);
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 22%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--mood-ink) 10%, transparent),
+    color-mix(in oklch, oklch(0.08 0.02 40) 75%, transparent)
+  );
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 6%, transparent) inset,
+    0 4px 14px color-mix(in oklch, oklch(0 0 0) 22%, transparent);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.mood-hack-btn:hover {
+  color: var(--mood-ink);
+  border-color: color-mix(in oklch, var(--mood-accent) 42%, transparent);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 10%, transparent) inset,
+    0 8px 20px color-mix(in oklch, oklch(0 0 0) 28%, transparent);
+}
+
+.mood-hack-btn:active {
+  transform: translateY(0);
+}
+
+.mood-hack-btn:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.mood-hack-code {
+  font-size: 0.65rem;
+  line-height: 1.5;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklch, oklch(0.06 0.02 40) 80%, transparent);
+  border: 1px solid color-mix(in oklch, var(--mood-ink) 10%, transparent);
+  color: var(--mood-ink-mute);
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.mood-hack input[type="range"] {
+  width: 100%;
+  accent-color: color-mix(in oklch, var(--mood-accent) 80%, transparent);
+}
+
+.mood-transport-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.mood-share-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.58rem 1rem;
+  min-height: 2.5rem;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--mood-ink);
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 32%, transparent);
+  background: linear-gradient(
+    168deg,
+    color-mix(in oklch, var(--mood-accent) 18%, transparent) 0%,
+    color-mix(in oklch, var(--mood-ink) 8%, transparent) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 12%, transparent) inset,
+    0 6px 16px color-mix(in oklch, oklch(0 0 0) 26%, transparent);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mood-share-pill:hover {
+  border-color: color-mix(in oklch, var(--mood-accent) 52%, transparent);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 18%, transparent) inset,
+    0 10px 22px color-mix(in oklch, oklch(0 0 0) 30%, transparent);
+}
+
+.mood-share-pill:active {
+  transform: translateY(0);
+}
+
+.mood-share-pill:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 50%, transparent);
+  outline-offset: 3px;
+}
+
+.mood-kbd-hint {
+  font-size: 0.65rem;
+  color: var(--mood-ink-mute);
+  text-align: center;
+  margin-top: 0.35rem;
+  letter-spacing: 0.02em;
+}
+
+/* Mood modal — dark glass */
+.mood-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  background: color-mix(in oklch, oklch(0.06 0.02 40) 78%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+@media (min-width: 640px) {
+  .mood-modal-backdrop {
+    align-items: center;
+    padding: 1.5rem;
+  }
+}
+
+.mood-modal-panel {
+  width: 100%;
+  max-width: 26rem;
+  border-radius: 1.5rem;
+  padding: 1.35rem 1.35rem 1.5rem;
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklch, oklch(0.2 0.025 45) 96%, transparent),
+    color-mix(in oklch, oklch(0.14 0.02 42) 98%, transparent)
+  );
+  border: 1px solid color-mix(in oklch, var(--mood-ink) 12%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, oklch(0.5 0.03 80) 6%, transparent) inset,
+    0 28px 64px color-mix(in oklch, oklch(0 0 0) 50%, transparent);
+  color: var(--mood-ink);
+}
+
+.mood-modal-panel .reveal-progress-track {
+  background: color-mix(in oklch, var(--mood-ink) 10%, transparent);
+}
+
+.mood-modal-panel .reveal-progress-bar {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--mood-accent-dim) 80%, transparent),
+    color-mix(in oklch, var(--mood-accent) 90%, transparent),
+    color-mix(in oklch, var(--mood-accent-dim) 80%, transparent)
+  );
+}
+
+.mood-modal-close {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 22%, transparent);
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklch, var(--mood-ink) 10%, transparent),
+    color-mix(in oklch, oklch(0.06 0.015 40) 90%, transparent)
+  );
+  color: var(--mood-ink-mute);
+  cursor: pointer;
+  box-shadow: 0 4px 12px color-mix(in oklch, oklch(0 0 0) 35%, transparent);
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+}
+
+.mood-modal-close:hover {
+  border-color: color-mix(in oklch, var(--mood-accent) 40%, transparent);
+  background: color-mix(in oklch, var(--mood-ink) 14%, transparent);
+  color: var(--mood-ink-soft);
+}
+
+.mood-modal-close:active {
+  transform: scale(0.96);
+}
+
+.mood-modal-close:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 50%, transparent);
+  outline-offset: 2px;
+}
+
+.mood-modal-field {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1.5px solid color-mix(in oklch, var(--mood-ink) 14%, transparent);
+  background: color-mix(in oklch, oklch(0.08 0.015 40) 90%, transparent);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mood-modal-field:focus-within {
+  border-color: color-mix(in oklch, var(--mood-accent) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--mood-accent) 18%, transparent);
+}
+
+.mood-modal-field textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--mood-ink);
+  font-family: var(--font-body, inherit);
+}
+
+.mood-modal-field textarea::placeholder {
+  color: var(--mood-ink-mute);
+}
+
+.mood-modal-field-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid color-mix(in oklch, var(--mood-ink) 10%, transparent);
+  font-size: 0.7rem;
+  color: var(--mood-ink-mute);
+}
+
+.mood-example-chip {
+  font-size: 0.6875rem;
+  padding: 0.4rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--mood-accent) 18%, transparent);
+  background: color-mix(in oklch, var(--mood-ink) 4%, transparent);
+  color: var(--mood-ink-mute);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+  text-align: left;
+}
+
+.mood-example-chip:hover {
+  border-color: color-mix(in oklch, var(--mood-accent) 35%, transparent);
+  color: var(--mood-ink-soft);
+  background: color-mix(in oklch, var(--mood-ink) 8%, transparent);
+}
+
+.mood-example-chip.is-on {
+  border-color: color-mix(in oklch, var(--mood-accent) 55%, transparent);
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklch, var(--mood-accent) 22%, transparent),
+    color-mix(in oklch, var(--mood-ink) 10%, transparent)
+  );
+  color: var(--mood-ink);
+  box-shadow: 0 4px 14px color-mix(in oklch, oklch(0 0 0) 28%, transparent);
+}
+
+.mood-example-chip:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.mood-modal-submit {
+  width: 100%;
+  padding: 0.88rem 1rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.15s ease, box-shadow 0.18s ease;
+  color: oklch(0.09 0.025 42);
+  border: 1px solid color-mix(in oklch, oklch(0.95 0.03 72) 45%, transparent);
+  background: linear-gradient(
+    168deg,
+    oklch(0.96 0.025 78) 0%,
+    oklch(0.82 0.1 62) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 35%, transparent) inset,
+    0 12px 32px color-mix(in oklch, oklch(0.3 0.1 48) 38%, transparent);
+}
+
+.mood-modal-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 color-mix(in oklch, oklch(1 0 0) 45%, transparent) inset,
+    0 16px 38px color-mix(in oklch, oklch(0.28 0.1 45) 42%, transparent);
+}
+
+.mood-modal-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mood-modal-submit:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--mood-accent) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.mood-modal-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mood-modal-loading-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklch, var(--mood-ink) 10%, transparent);
+  background: color-mix(in oklch, var(--mood-ink) 5%, transparent);
+}
+
+.mood-modal-spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 3px solid color-mix(in oklch, var(--mood-ink) 15%, transparent);
+  border-top-color: color-mix(in oklch, var(--mood-accent) 70%, transparent);
+  flex-shrink: 0;
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mood-modal-spinner { animation: none; border-top-color: var(--mood-accent); }
+}
+
+.mood-modal-success {
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in oklch, oklch(0.55 0.12 145) 35%, transparent);
+  background: color-mix(in oklch, oklch(0.45 0.1 145) 18%, transparent);
+}
+
+.mood-modal-success p {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--mood-ink-soft);
+  line-height: 1.45;
 }

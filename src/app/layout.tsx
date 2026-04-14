@@ -18,13 +18,13 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "anymusic — Collective Jigsaw Audio Canvas",
+  title: "anymusic — Mood Radio",
   description:
-    "Add a feeling to the puzzle. Every five pieces, the group’s emotions merge into one evolving master track.",
+    "Tune into the internet’s mood right now. One shared stream of short clips from strangers’ feelings — add a line and join the rotation.",
   openGraph: {
-    title: "anymusic",
+    title: "anymusic — Mood Radio",
     description:
-      "A shared puzzle of feelings and sound. Each tile is a clip; the collective track grows as more join in.",
+      "One live stream of short clips from strangers’ feelings. Add a line — it joins the rotation.",
     type: "website",
   },
 };

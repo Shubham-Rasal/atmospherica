@@ -9,8 +9,15 @@ create table if not exists tracks (
   play_count int default 0,
   guess_count int default 0,
   revealed boolean default false,
-  tpuf_vector_id text
+  tpuf_vector_id text,
+  feeling_text text,
+  grid_position int,
+  queue_order double precision
 );
+
+-- Existing projects created before this column may need:
+-- alter table public.tracks add column if not exists feeling_text text;
+-- alter table public.tracks add column if not exists grid_position int;
 
 -- Guesses table
 create table if not exists guesses (

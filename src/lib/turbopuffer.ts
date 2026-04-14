@@ -10,3 +10,8 @@ function getClient() {
 export function getArchetypesNs() {
   return getClient().namespace("atmospherica-archetypes");
 }
+
+/** One row per track feeling embedding — used for emotional queue placement (ANN). */
+export function getTrackFeelingsNs() {
+  return getClient().namespace("atmospherica-track-feelings");
+}

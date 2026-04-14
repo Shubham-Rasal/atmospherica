@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from("tracks")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("queue_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true })
       .range(offset, offset + limit - 1);
 
     if (error) throw error;

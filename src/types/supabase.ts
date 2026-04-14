@@ -15,6 +15,7 @@ export interface Database {
           tpuf_vector_id: string | null;
           feeling_text: string | null;
           grid_position: number | null;
+          queue_order: number | null;
         };
         Insert: {
           id: string;
@@ -26,6 +27,7 @@ export interface Database {
           guess_count?: number;
           feeling_text?: string | null;
           grid_position?: number | null;
+          queue_order?: number | null;
         };
         Update: {
           id?: string;
@@ -37,6 +39,7 @@ export interface Database {
           guess_count?: number;
           feeling_text?: string | null;
           grid_position?: number | null;
+          queue_order?: number | null;
         };
       };
       guesses: {

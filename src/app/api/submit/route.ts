@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { embed } from "@/lib/embeddings";
-import { getArchetypesNs } from "@/lib/turbopuffer";
+import { getArchetypesNs, getTrackFeelingsNs } from "@/lib/turbopuffer";
+import { computeQueueOrderForNewClip } from "@/lib/track-queue";
 import { supabaseAdmin } from "@/lib/supabase";
 import { ElevenLabsClient } from "elevenlabs";
-import { generateMasterTrack } from "@/lib/master";
 import { serializeError } from "@/lib/errors";
 import type { Database } from "@/types/supabase";
 
@@ -15,7 +15,7 @@ const elevenlabs = new ElevenLabsClient({
 
 export async function POST(req: NextRequest) {
   try {
-    const { feeling, userId, gridPosition } = await req.json();
+    const { feeling, userId } = await req.json();
 
     if (!feeling || typeof feeling !== "string" || feeling.trim().length < 5) {
       return NextResponse.json({ error: "Feeling too short" }, { status: 400 });
@@ -71,44 +71,61 @@ export async function POST(req: NextRequest) {
     const { data: urlData } = supabaseAdmin.storage.from("audio").getPublicUrl(fileName);
     const musicUrl = urlData.publicUrl;
 
-    // 6. Insert track into Supabase
+    // 6. Queue position from Turbopuffer: nearest emotional neighbor among existing clips
+    const queueOrder = await computeQueueOrderForNewClip(feelingVector, getTrackFeelingsNs());
+
+    // 7. Insert track into Supabase
     const trackId = crypto.randomUUID();
-    // Try inserting with feeling_text; fall back without it if column not yet migrated
-    let dbError;
-    const withFeeling: TracksInsert = {
+    const row: TracksInsert = {
       id: trackId,
       music_url: musicUrl,
       anon_user_id: userId,
       feeling_text: trimmed,
       revealed: false,
       tpuf_vector_id: trackId,
-      grid_position: typeof gridPosition === "number" ? gridPosition : null,
+      grid_position: null,
+      queue_order: queueOrder,
     };
-    ({ error: dbError } = await supabaseAdmin.from("tracks").insert(withFeeling));
-
+    const { error: dbError } = await supabaseAdmin.from("tracks").insert(row);
     if (dbError) {
-      // Retry without feeling_text in case column doesn't exist yet
-      ({ error: dbError } = await supabaseAdmin.from("tracks").insert({
-        id: trackId,
-        music_url: musicUrl,
-        anon_user_id: userId,
-        revealed: false,
-        tpuf_vector_id: trackId,
-        grid_position: typeof gridPosition === "number" ? gridPosition : null,
-      }));
+      const msg = dbError.message ?? "";
+      if (
+        msg.includes("feeling_text") ||
+        (msg.includes("schema cache") && msg.includes("tracks"))
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Database is missing the feeling_text column. In Supabase: SQL Editor → run: alter table public.tracks add column if not exists feeling_text text; (see supabase/migrations/20260414120000_tracks_feeling_text.sql)",
+          },
+          { status: 503 }
+        );
+      }
+      if (msg.includes("queue_order") && msg.includes("schema")) {
+        return NextResponse.json(
+          {
+            error:
+              "Database is missing the queue_order column. Run supabase/migrations/20260414130000_tracks_queue_order.sql in the SQL Editor.",
+          },
+          { status: 503 }
+        );
+      }
+      throw dbError;
     }
 
-    if (dbError) throw dbError;
-
-    const { count: feelingCount, error: countError } = await supabaseAdmin
-      .from("tracks")
-      .select("*", { count: "exact", head: true })
-      .not("feeling_text", "is", null);
-
-    if (countError) throw countError;
-
-    if (typeof feelingCount === "number" && feelingCount > 0 && feelingCount % 5 === 0) {
-      void generateMasterTrack().catch((e) => console.error("Master track regeneration:", e));
+    // 8. Index this clip in Turbopuffer for future similarity search
+    try {
+      await getTrackFeelingsNs().write({
+        upsert_rows: [
+          {
+            id: trackId,
+            vector: feelingVector,
+          },
+        ],
+        distance_metric: "cosine_distance",
+      });
+    } catch (tpErr) {
+      console.error("Track feelings upsert (non-fatal):", tpErr);
     }
 
     return NextResponse.json({ trackId, musicUrl });
