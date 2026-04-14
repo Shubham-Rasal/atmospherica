@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // 1. Check track exists
     const { data: track } = await supabaseAdmin
       .from("tracks")
-      .select("id, guess_count, feeling_text")
+      .select("id, guess_count")
       .eq("id", trackId)
       .single();
 
@@ -116,6 +116,19 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", trackId);
 
+    // 10. Fetch feeling_text gracefully (column may not exist yet)
+    let feelingText: string | null = null;
+    try {
+      const { data: trackFull } = await supabaseAdmin
+        .from("tracks")
+        .select("feeling_text")
+        .eq("id", trackId)
+        .single();
+      feelingText = (trackFull as any)?.feeling_text ?? null;
+    } catch {
+      // column not yet migrated — reveal will be hidden
+    }
+
     const scorecard: Scorecard = {
       emotionalAccuracy: Math.round(emotionalAccuracy * 100),
       specificity: Math.round(specificity * 100),
@@ -124,7 +137,7 @@ export async function POST(req: NextRequest) {
       totalGuesses,
       overallScore: Math.round(overallScore * 100),
       guessText: trimmed,
-      feelingText: track.feeling_text ?? null,
+      feelingText,
     };
 
     return NextResponse.json({ scorecard, guessId });

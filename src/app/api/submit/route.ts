@@ -68,14 +68,27 @@ export async function POST(req: NextRequest) {
 
     // 6. Insert track into Supabase
     const trackId = crypto.randomUUID();
-    const { error: dbError } = await supabaseAdmin.from("tracks").insert({
+    // Try inserting with feeling_text; fall back without it if column not yet migrated
+    let dbError;
+    ({ error: dbError } = await supabaseAdmin.from("tracks").insert({
       id: trackId,
       music_url: musicUrl,
       anon_user_id: userId,
       feeling_text: trimmed,
       revealed: false,
       tpuf_vector_id: trackId,
-    });
+    } as any));
+
+    if (dbError) {
+      // Retry without feeling_text in case column doesn't exist yet
+      ({ error: dbError } = await supabaseAdmin.from("tracks").insert({
+        id: trackId,
+        music_url: musicUrl,
+        anon_user_id: userId,
+        revealed: false,
+        tpuf_vector_id: trackId,
+      }));
+    }
 
     if (dbError) throw dbError;
 
