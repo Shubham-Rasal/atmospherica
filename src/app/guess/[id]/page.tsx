@@ -49,7 +49,8 @@ export default function GuessPage() {
       audioRef.current.play(); setPlaying(true);
       intervalRef.current = setInterval(() => {
         if (audioRef.current) {
-          const pct = (audioRef.current.currentTime / (audioRef.current.duration || 22)) * 100;
+          const duration = audioRef.current.duration || 22;
+          const pct = (audioRef.current.currentTime / duration) * 100;
           setProgress(pct);
         }
       }, 100);
@@ -68,8 +69,8 @@ export default function GuessPage() {
     if (!guess.trim()) return;
     setSubmitting(true); setError("");
     try {
-      let guesserId = localStorage.getItem("atmospherica_uid");
-      if (!guesserId) { guesserId = crypto.randomUUID(); localStorage.setItem("atmospherica_uid", guesserId); }
+      let guesserId = localStorage.getItem("anymusic_uid");
+      if (!guesserId) { guesserId = crypto.randomUUID(); localStorage.setItem("anymusic_uid", guesserId); }
       const res = await fetch("/api/guess", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -139,23 +140,28 @@ export default function GuessPage() {
                 style={{ background: playing ? "#F0ECFF" : "#FAFAF8" }}
               >
                 <div className="flex items-end gap-[2px] h-16 mb-4">
-                  {bars.map((h, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-full flex-1 ${playing ? "waveform-bar" : ""}`}
-                      style={{
-                        background:
-                          i / bars.length < progress / 100
+                  {bars.map((h, i) => {
+                    const played = i / bars.length < progress / 100;
+                    // Sync animation phase to progress: negative delay = skip ahead in animation cycle
+                    const cycleMs = 1200;
+                    const phaseOffset = -((progress / 100) * cycleMs + i * 48) % cycleMs;
+                    return (
+                      <div
+                        key={i}
+                        className={`rounded-full flex-1 ${playing ? "waveform-bar" : ""}`}
+                        style={{
+                          background: played
                             ? "var(--pill-dark)"
                             : playing
                             ? "rgba(124,91,245,0.35)"
                             : "#DEDAD2",
-                        height: `${h}%`,
-                        animationDelay: `${i * 0.04}s`,
-                        transition: "background 0.15s",
-                      }}
-                    />
-                  ))}
+                          height: `${h}%`,
+                          animationDelay: playing ? `${phaseOffset}ms` : "0ms",
+                          transition: "background 0.15s",
+                        }}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Progress bar */}

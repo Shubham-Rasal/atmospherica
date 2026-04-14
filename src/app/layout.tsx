@@ -18,12 +18,12 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Atmospherica — Can you feel what they felt?",
+  title: "anymusic — Can you feel what they felt?",
   description:
     "Someone described a feeling. AI turned it into music. Can you guess what they were feeling?",
   openGraph: {
-    title: "Atmospherica",
-    description: "Can you feel what they felt? Guess the emotion behind the music.",
+    title: "anymusic",
+    description: "Someone described a moment. AI turned it into music. Can you guess what they felt?",
     type: "website",
   },
 };

@@ -75,20 +75,18 @@ export default function ResultsPage() {
   }
 
   const grade = getGrade(scorecard.overallScore);
-  const challengeUrl = `https://atmospherica-sigma.vercel.app/guess/${id}`;
+  const challengeUrl = `https://anymusic.vercel.app/guess/${id}`;
 
   async function copyShareText() {
     const revealLine = scorecard!.feelingText ? `\nThe feeling was: "${scorecard!.feelingText}"` : "";
-    const text = `🎵 Atmospherica — I guessed a feeling from music!\n\nGrade: ${grade.grade} (${grade.label})\nOverall: ${scorecard!.overallScore}%\nEmotional accuracy: ${scorecard!.emotionalAccuracy}%\n\nMy guess: "${scorecard!.guessText}"${revealLine}\n\nCan you do better? ${challengeUrl}`;
+    const text = `🎵 anymusic — I guessed the vibe from music!\n\nGrade: ${grade.grade} (${grade.label})\nOverall: ${scorecard!.overallScore}%\nEmotional accuracy: ${scorecard!.emotionalAccuracy}%\n\nMy guess: "${scorecard!.guessText}"${revealLine}\n\nCan you do better? ${challengeUrl}`;
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }
 
   async function copyChallenge() {
-    await navigator.clipboard.writeText(
-      `🎵 Can you guess what this music is feeling?\n\n${challengeUrl}`
-    );
+    await navigator.clipboard.writeText(challengeUrl);
     setChallengeCopied(true);
     setTimeout(() => setChallengeCopied(false), 2500);
   }

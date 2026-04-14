@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const EXAMPLES = [
-  "waiting for test results that could change everything",
-  "the last day of summer, knowing school starts tomorrow",
-  "missing someone who is still alive but gone from my life",
-  "driving alone at 2am with the music too loud",
-  "finding out something you believed was never true",
+  "a rainy sunday morning with nowhere to be",
+  "the silence after a crowd leaves",
+  "driving through a city you don't know at night",
+  "the last day of summer before everything changes",
+  "standing on a rooftop watching the sun go down",
 ];
 
 const LOADING_STEPS = [
@@ -109,10 +109,10 @@ export default function SubmitPage() {
     setLoading(true);
     setError("");
     try {
-      let userId = localStorage.getItem("atmospherica_uid");
+      let userId = localStorage.getItem("anymusic_uid");
       if (!userId) {
         userId = crypto.randomUUID();
-        localStorage.setItem("atmospherica_uid", userId);
+        localStorage.setItem("anymusic_uid", userId);
       }
       const res = await fetch("/api/submit", {
         method: "POST",
@@ -253,11 +253,11 @@ export default function SubmitPage() {
         <Link href="/" className="back-btn" aria-label="Back">
           ←
         </Link>
-        <span className="submit-nav-label">atmospherica</span>
+        <span className="submit-nav-label">anymusic</span>
       </header>
 
       <div className="submit-content">
-        <p className="submit-caption">describe the moment, not the emotion</p>
+        <p className="submit-caption">describe anything — a place, a moment, a feeling</p>
 
         <div className="submit-form-area">
           <form onSubmit={handleSubmit} className="submit-form">
@@ -267,7 +267,7 @@ export default function SubmitPage() {
                 onChange={(e) => setFeeling(e.target.value)}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
-                placeholder="e.g. waiting for test results that could change everything…"
+                placeholder="e.g. a rainy night drive through a city you don't know…"
                 rows={6}
                 maxLength={500}
                 className="feeling-textarea"
