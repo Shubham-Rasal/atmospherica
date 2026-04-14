@@ -248,9 +248,6 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="px-6 pb-8 text-center">
-        <p className="text-xs font-medium" style={{ color: "rgba(28,27,24,0.4)" }}>
-          turbopuffer vector search × ElevenLabs AI music
-        </p>
       </footer>
     </main>
   );

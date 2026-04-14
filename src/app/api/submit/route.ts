@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       id: trackId,
       music_url: musicUrl,
       anon_user_id: userId,
+      feeling_text: trimmed,
       revealed: false,
       tpuf_vector_id: trackId,
     });

@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // 1. Check track exists
     const { data: track } = await supabaseAdmin
       .from("tracks")
-      .select("id, guess_count")
+      .select("id, guess_count, feeling_text")
       .eq("id", trackId)
       .single();
 
@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
       totalGuesses,
       overallScore: Math.round(overallScore * 100),
       guessText: trimmed,
+      feelingText: track.feeling_text ?? null,
     };
 
     return NextResponse.json({ scorecard, guessId });

@@ -13,6 +13,7 @@ export interface Database {
           guess_count: number;
           revealed: boolean;
           tpuf_vector_id: string | null;
+          feeling_text: string | null;
         };
         Insert: {
           id: string;
@@ -22,6 +23,7 @@ export interface Database {
           tpuf_vector_id?: string | null;
           play_count?: number;
           guess_count?: number;
+          feeling_text?: string | null;
         };
         Update: {
           id?: string;
@@ -87,4 +89,5 @@ export type Scorecard = {
   totalGuesses: number;
   overallScore: number;
   guessText: string;
+  feelingText: string | null;
 };

@@ -48,11 +48,20 @@ export default function ResultsPage() {
   const searchParams = useSearchParams();
   const [scorecard, setScorecard] = useState<Scorecard | null>(null);
   const [copied, setCopied] = useState(false);
+  const [challengeCopied, setChallengeCopied] = useState(false);
+  const [revealShown, setRevealShown] = useState(false);
 
   useEffect(() => {
     const raw = searchParams.get("score");
     if (raw) { try { setScorecard(JSON.parse(decodeURIComponent(raw))); } catch {} }
   }, [searchParams]);
+
+  // Auto-show reveal after a short delay for the emotional payoff
+  useEffect(() => {
+    if (!scorecard) return;
+    const t = setTimeout(() => setRevealShown(true), 1200);
+    return () => clearTimeout(t);
+  }, [scorecard]);
 
   if (!scorecard) {
     return (
@@ -66,12 +75,22 @@ export default function ResultsPage() {
   }
 
   const grade = getGrade(scorecard.overallScore);
+  const challengeUrl = `https://atmospherica-sigma.vercel.app/guess/${id}`;
 
   async function copyShareText() {
-    const text = `🎵 Atmospherica — I guessed a feeling from music!\n\nGrade: ${grade.grade} (${grade.label})\nOverall: ${scorecard!.overallScore}%\nEmotional accuracy: ${scorecard!.emotionalAccuracy}%\n\nMy guess: "${scorecard!.guessText}"\n\nCan you do better? atmospherica.vercel.app/guess/${id}`;
+    const revealLine = scorecard!.feelingText ? `\nThe feeling was: "${scorecard!.feelingText}"` : "";
+    const text = `🎵 Atmospherica — I guessed a feeling from music!\n\nGrade: ${grade.grade} (${grade.label})\nOverall: ${scorecard!.overallScore}%\nEmotional accuracy: ${scorecard!.emotionalAccuracy}%\n\nMy guess: "${scorecard!.guessText}"${revealLine}\n\nCan you do better? ${challengeUrl}`;
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  }
+
+  async function copyChallenge() {
+    await navigator.clipboard.writeText(
+      `🎵 Can you guess what this music is feeling?\n\n${challengeUrl}`
+    );
+    setChallengeCopied(true);
+    setTimeout(() => setChallengeCopied(false), 2500);
   }
 
   return (
@@ -119,6 +138,35 @@ export default function ResultsPage() {
             </div>
           </div>
 
+          {/* The Reveal — the emotional payoff */}
+          {scorecard.feelingText && (
+            <div
+              className="card p-5 text-center transition-all duration-700"
+              style={{
+                opacity: revealShown ? 1 : 0,
+                transform: revealShown ? "translateY(0)" : "translateY(12px)",
+                background: "var(--surface)",
+              }}
+            >
+              <p className="text-xs font-bold tracking-widest mb-3" style={{ color: "var(--muted)" }}>
+                THE ORIGINAL FEELING
+              </p>
+              <p
+                className="text-base italic leading-relaxed mb-1"
+                style={{ fontFamily: "var(--font-display, serif)", color: "var(--text)" }}
+              >
+                &ldquo;{scorecard.feelingText}&rdquo;
+              </p>
+              <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
+                {scorecard.emotionalAccuracy >= 70
+                  ? "You really felt it. 💜"
+                  : scorecard.emotionalAccuracy >= 50
+                  ? "You were close."
+                  : "Music speaks differently to everyone."}
+              </p>
+            </div>
+          )}
+
           {/* Breakdown card */}
           <div className="card p-5 flex flex-col gap-5">
             <p className="text-xs font-bold tracking-widest" style={{ color: "var(--muted)" }}>
@@ -156,7 +204,36 @@ export default function ResultsPage() {
             />
           </div>
 
-          {/* Actions */}
+          {/* Challenge a friend */}
+          <div
+            className="card p-4 flex flex-col gap-3"
+            style={{ background: "var(--surface-2)" }}
+          >
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: 18 }}>🎯</span>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "var(--text)" }}>Challenge a friend</p>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  Send them this track — can they score higher?
+                </p>
+              </div>
+            </div>
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-mono truncate"
+              style={{ background: "var(--border)", color: "var(--text-2)" }}
+            >
+              <span className="truncate flex-1">{challengeUrl}</span>
+            </div>
+            <button
+              onClick={copyChallenge}
+              className="btn-dark py-2.5 text-sm w-full transition-all duration-200"
+              style={{ background: challengeCopied ? "#15803D" : "var(--pill-dark)" }}
+            >
+              {challengeCopied ? "✓ Link copied!" : "🔗 Copy challenge link"}
+            </button>
+          </div>
+
+          {/* Share score */}
           <button
             onClick={copyShareText}
             className="btn-dark py-3.5 text-sm w-full transition-all duration-200"
